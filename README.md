@@ -42,7 +42,7 @@ Reconable is a sophisticated LinkedIn profile analysis tool that demonstrates th
 
 The following PlantUML diagram shows the complete architecture of Reconable
 
-![Architecture Diagram](./docs/FinalDesign.png)
+![Architecture Diagram](./docs/FinalDesignDocument.png)
 
 ### Architecture Components
 
