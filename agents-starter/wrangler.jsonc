@@ -4,8 +4,8 @@
  */
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "agents-starter",
-	"main": "src/server.ts",
+	"name": "reconable-lite-plus",
+	"main": "src/reconable-server.ts",
 	"compatibility_date": "2025-08-03",
 	"compatibility_flags": [
 		"nodejs_compat"
@@ -14,14 +14,18 @@
 		"binding": "AI",
 		"remote": true
 	},
+	"browser": {
+		"binding": "BROWSER_RENDERING"
+	},
 	"assets": {
-		"directory": "public"
+		"directory": "public",
+		"binding": "ASSETS"
 	},
 	"durable_objects": {
 		"bindings": [
 			{
-				"name": "Chat",
-				"class_name": "Chat"
+				"name": "SUBJECT_ORCHESTRATOR",
+				"class_name": "SubjectOrchestrator"
 			}
 		]
 	},
@@ -29,12 +33,35 @@
 		{
 			"tag": "v1",
 			"new_sqlite_classes": [
-				"Chat"
+				"SubjectOrchestrator",
+				"UserSessionDO"
+			]
+		},
+		{
+			"tag": "v2",
+			"deleted_classes": [
+				"UserSessionDO"
 			]
 		}
 	],
 	"observability": {
 		"enabled": true
+	},
+	"vectorize": [
+		{
+			"binding": "VECTORIZE_INDEX",
+			"index_name": "reconable-embeddings"
+		}
+	],
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "reconable-db",
+			"database_id": "7226357d-0e1c-4101-b588-ff3bae76b6a3"
+		}
+	],
+	"vars": {
+		"BRIGHTDATA_DATASET_ID": "gd_l1viktl72bvl7bjuj0"
 	}
 	/**
 	 * Smart Placement

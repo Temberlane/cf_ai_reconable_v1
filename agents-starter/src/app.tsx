@@ -23,7 +23,8 @@ import {
   Sun,
   Trash,
   PaperPlaneTilt,
-  Stop
+  Stop,
+  LinkedinLogo
 } from "@phosphor-icons/react";
 
 // List of tools that require human confirmation
@@ -176,6 +177,17 @@ export default function Chat() {
             size="md"
             shape="square"
             className="rounded-full h-9 w-9"
+            onClick={() => window.open('/linkedin-auth.html', '_blank')}
+            title="LinkedIn OAuth Demo"
+          >
+            <LinkedinLogo size={20} className="text-[#0077b5]" />
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="md"
+            shape="square"
+            className="rounded-full h-9 w-9"
             onClick={toggleTheme}
           >
             {theme === "dark" ? <Sun size={20} /> : <Moon size={20} />}
@@ -215,7 +227,22 @@ export default function Chat() {
                       <span className="text-[#F48120]">•</span>
                       <span>Local time in different locations</span>
                     </li>
+                    <li className="flex items-center gap-2">
+                      <span className="text-[#F48120]">•</span>
+                      <span>LinkedIn OSINT research and profile analysis</span>
+                    </li>
                   </ul>
+                  <div className="pt-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => window.open('/linkedin-auth.html', '_blank')}
+                      className="w-full"
+                    >
+                      <LinkedinLogo size={16} className="text-[#0077b5] mr-2" />
+                      Connect with LinkedIn
+                    </Button>
+                  </div>
                 </div>
               </Card>
             </div>

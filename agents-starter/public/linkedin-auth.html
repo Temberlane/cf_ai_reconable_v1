@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LinkedIn OAuth Demo</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #0077b5;
+            text-align: center;
+        }
+        .auth-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #e1e5e9;
+            border-radius: 6px;
+            background-color: #fafbfc;
+        }
+        .btn {
+            background-color: #0077b5;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            text-decoration: none;
+            display: inline-block;
+            margin: 10px 5px;
+        }
+        .btn:hover {
+            background-color: #005885;
+        }
+        .btn-secondary {
+            background-color: #6c757d;
+        }
+        .btn-secondary:hover {
+            background-color: #545b62;
+        }
+        .status {
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+        .status.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status.info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .user-info {
+            background-color: #e9ecef;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 15px 0;
+        }
+        .hidden {
+            display: none;
+        }
+        .form-group {
+            margin: 15px 0;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>LinkedIn OAuth Integration Demo</h1>
+        
+        <div class="auth-section">
+            <h2>Authentication</h2>
+            <div class="form-group">
+                <label for="userId">User ID:</label>
+                <input type="text" id="userId" placeholder="Enter a user ID (e.g., user123)" value="user123">
+            </div>
+            
+            <div id="authStatus" class="status info hidden">
+                Checking authentication status...
+            </div>
+            
+            <div id="userInfo" class="user-info hidden">
+                <h3>Authenticated User</h3>
+                <div id="userDetails"></div>
+            </div>
+            
+            <div id="authButtons">
+                <button id="checkAuthBtn" class="btn">Check Authentication Status</button>
+                <button id="authBtn" class="btn">Authenticate with LinkedIn</button>
+                <button id="revokeBtn" class="btn btn-secondary">Revoke Access</button>
+            </div>
+        </div>
+
+        <div class="auth-section">
+            <h2>LinkedIn Search</h2>
+            <div class="form-group">
+                <label for="searchName">Name to Search:</label>
+                <input type="text" id="searchName" placeholder="Enter a name to search" value="John Smith">
+            </div>
+            <div class="form-group">
+                <label for="searchLocation">Location (optional):</label>
+                <input type="text" id="searchLocation" placeholder="Enter location">
+            </div>
+            <div class="form-group">
+                <label for="searchCompany">Company (optional):</label>
+                <input type="text" id="searchCompany" placeholder="Enter company name">
+            </div>
+            
+            <button id="searchBtn" class="btn">Search LinkedIn Profiles</button>
+            
+            <div id="searchResults" class="hidden">
+                <h3>Search Results</h3>
+                <div id="searchResultsContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = window.location.origin;
+        
+        // Get elements
+        const userIdInput = document.getElementById('userId');
+        const authStatus = document.getElementById('authStatus');
+        const userInfo = document.getElementById('userInfo');
+        const userDetails = document.getElementById('userDetails');
+        const authButtons = document.getElementById('authButtons');
+        const checkAuthBtn = document.getElementById('checkAuthBtn');
+        const authBtn = document.getElementById('authBtn');
+        const revokeBtn = document.getElementById('revokeBtn');
+        const searchBtn = document.getElementById('searchBtn');
+        const searchResults = document.getElementById('searchResults');
+        const searchResultsContent = document.getElementById('searchResultsContent');
+        const searchName = document.getElementById('searchName');
+        const searchLocation = document.getElementById('searchLocation');
+        const searchCompany = document.getElementById('searchCompany');
+
+        // Check authentication status
+        async function checkAuthStatus() {
+            const userId = userIdInput.value;
+            if (!userId) {
+                showStatus('Please enter a user ID', 'error');
+                return;
+            }
+
+            showStatus('Checking authentication status...', 'info');
+            
+            try {
+                const response = await fetch(`${API_BASE}/auth/linkedin/status?userId=${encodeURIComponent(userId)}`);
+                const data = await response.json();
+                
+                if (data.authenticated) {
+                    showStatus('User is authenticated with LinkedIn', 'success');
+                    showUserInfo(data.user);
+                } else {
+                    showStatus('User is not authenticated. Click "Authenticate with LinkedIn" to begin.', 'info');
+                    hideUserInfo();
+                }
+            } catch (error) {
+                showStatus(`Error checking authentication: ${error.message}`, 'error');
+            }
+        }
+
+        // Show user info
+        function showUserInfo(user) {
+            userDetails.innerHTML = `
+                <p><strong>Name:</strong> ${user.fullName}</p>
+                <p><strong>Profile URL:</strong> <a href="${user.profileUrl}" target="_blank">${user.profileUrl}</a></p>
+                ${user.profilePicture ? `<p><strong>Profile Picture:</strong> <img src="${user.profilePicture}" alt="Profile" style="max-width: 100px; border-radius: 50%;"></p>` : ''}
+            `;
+            userInfo.classList.remove('hidden');
+        }
+
+        // Hide user info
+        function hideUserInfo() {
+            userInfo.classList.add('hidden');
+        }
+
+        // Show status message
+        function showStatus(message, type) {
+            authStatus.textContent = message;
+            authStatus.className = `status ${type}`;
+            authStatus.classList.remove('hidden');
+        }
+
+        // Authenticate with LinkedIn
+        function authenticateWithLinkedIn() {
+            const userId = userIdInput.value;
+            if (!userId) {
+                showStatus('Please enter a user ID', 'error');
+                return;
+            }
+            
+            window.location.href = `${API_BASE}/auth/linkedin?userId=${encodeURIComponent(userId)}`;
+        }
+
+        // Revoke access
+        async function revokeAccess() {
+            const userId = userIdInput.value;
+            if (!userId) {
+                showStatus('Please enter a user ID', 'error');
+                return;
+            }
+
+            showStatus('Revoking access...', 'info');
+            
+            try {
+                const response = await fetch(`${API_BASE}/auth/linkedin/revoke?userId=${encodeURIComponent(userId)}`, {
+                    method: 'POST'
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    showStatus('Access revoked successfully', 'success');
+                    hideUserInfo();
+                } else {
+                    showStatus(`Error revoking access: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                showStatus(`Error revoking access: ${error.message}`, 'error');
+            }
+        }
+
+        // Search LinkedIn profiles
+        async function searchProfiles() {
+            const userId = userIdInput.value;
+            const name = searchName.value;
+            
+            if (!userId || !name) {
+                showStatus('Please enter both user ID and name to search', 'error');
+                return;
+            }
+
+            showStatus('Searching LinkedIn profiles...', 'info');
+            
+            try {
+                const params = new URLSearchParams({
+                    userId: userId,
+                    name: name
+                });
+                
+                if (searchLocation.value) params.append('location', searchLocation.value);
+                if (searchCompany.value) params.append('company', searchCompany.value);
+
+                const response = await fetch(`${API_BASE}/agents/chat`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        messages: [{
+                            role: 'user',
+                            content: `Search for LinkedIn profiles with name="${name}"${searchLocation.value ? `, location="${searchLocation.value}"` : ''}${searchCompany.value ? `, company="${searchCompany.value}"` : ''}. Use userId="${userId}".`
+                        }]
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let result = '';
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    
+                    result += decoder.decode(value, { stream: true });
+                }
+
+                showStatus('Search completed', 'success');
+                searchResultsContent.innerHTML = `<pre>${JSON.stringify(JSON.parse(result), null, 2)}</pre>`;
+                searchResults.classList.remove('hidden');
+            } catch (error) {
+                showStatus(`Error searching profiles: ${error.message}`, 'error');
+            }
+        }
+
+        // Event listeners
+        checkAuthBtn.addEventListener('click', checkAuthStatus);
+        authBtn.addEventListener('click', authenticateWithLinkedIn);
+        revokeBtn.addEventListener('click', revokeAccess);
+        searchBtn.addEventListener('click', searchProfiles);
+
+        // Check auth status on page load
+        window.addEventListener('load', () => {
+            checkAuthStatus();
+        });
+    </script>
+</body>
+</html>

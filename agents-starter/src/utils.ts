@@ -55,8 +55,9 @@ export async function processToolCalls<Tools extends ToolSet>({
           ) as keyof typeof executions;
 
           // Only process tools that require confirmation (are in executions object) and are in 'input-available' state
-          if (!(toolName in executions) || part.state !== "input-available")
+          if (!(toolName in executions) || part.state !== "input-available") {
             return part;
+          }
 
           let result: unknown;
 
